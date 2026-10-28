@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geometria Inclusiva: Il Quadrato - Esercizio Cloze</title>
+  <!-- Tailwind CSS per uno stile moderno e reattivo -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti per festeggiare i successi -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Font OpenDyslexic via CDN per l'accessibilità BES/DSA -->
+  <style>
+    @font-face {
+      font-family: 'OpenDyslexic';
+      src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      transition: font-size 0.2s ease;
+    }
+
+    .font-dyslexic {
+      font-family: 'OpenDyslexic', sans-serif !important;
+    }
+
+    /* Target drop-zone highlight */
+    .drop-slot {
+      min-width: 130px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 12px;
+      margin: 2px 4px;
+      border: 2px dashed #3b82f6;
+      border-radius: 12px;
+      background-color: #eff6ff;
+      vertical-align: middle;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .drop-slot.filled {
+      border-style: solid;
+      background-color: #dbeafe;
+    }
+
+    .drop-slot.selected {
+      ring: 4px;
+      border-color: #2563eb;
+      background-color: #bfdbfe;
+    }
+
+    .drop-slot.correct {
+      border-color: #10b981;
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    .drop-slot.incorrect {
+      border-color: #ef4444;
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+
+    .word-btn {
+      transition: all 0.2s ease;
+      touch-action: manipulation;
+    }
+
+    .word-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Printable Styles */
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      body {
+        background: white;
+        color: black;
+      }
+      .card-box {
+        box-shadow: none;
+        border: 1px solid #ccc;
+      }
+    }
+  </style>
+</head>
+<body class="bg-amber-50/50 text-slate-800 min-h-screen pb-12">
+
+  <!-- Header Accessibilità & Controlli -->
+  <header class="bg-indigo-700 text-white shadow-lg sticky top-0 z-50 no-print">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center gap-2">
+        <span class="text-3xl">🟩</span>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-wide">Imparo la Geometria</h1>
+      </div>
+
+      <!-- Strumenti Accessibilità -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Text-to-Speech Globale -->
+        <button id="btnReadText" onclick="readFullText()" class="bg-amber-400 hover:bg-amber-500 text-indigo-950 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1 shadow transition text-sm sm:text-base">
+          <span>🔊</span> Ascolta Testo
+        </button>
+
+        <!-- Toggle Font Alta Legibilità -->
+        <button onclick="toggleDyslexicFont()" class="bg-indigo-600 hover:bg-indigo-500 border border-indigo-400 px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1">
+          <span>📖</span> Font Alta Legibilità
+        </button>
+
+        <!-- Dimensione Testo -->
+        <div class="flex items-center bg-indigo-800 rounded-lg p-1">
+          <button onclick="changeFontSize(-2)" class="px-2 py-0.5 text-lg font-bold hover:bg-indigo-700 rounded">A-</button>
+          <span class="px-1 text-xs uppercase tracking-wider">Testo</span>
+          <button onclick="changeFontSize(2)" class="px-2 py-0.5 text-lg font-bold hover:bg-indigo-700 rounded">A+</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenitore Principale -->
+  <main class="max-w-4xl mx-auto px-4 pt-6">
+
+    <!-- Scheda di Configurazione & Livello -->
+    <section class="bg-white rounded-2xl shadow-md p-5 mb-6 border border-slate-200 no-print">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-indigo-900 flex items-center gap-2">
+            <span>⚙️</span> Impostazioni Esercizio
+          </h2>
+          <p class="text-sm text-slate-600">Scegli il livello di difficoltà più adatto alle tue esigenze.</p>
+        </div>
+
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <label for="difficulty" class="text-sm font-semibold text-slate-700">Difficoltà:</label>
+          <select id="difficulty" onchange="changeDifficulty()" class="bg-slate-100 border border-slate-300 text-slate-800 text-sm rounded-xl p-2.5 font-bold focus:ring-2 focus:ring-indigo-500 flex-1 sm:flex-initial">
+            <option value="easy">🟢 Facile (Solo 5 parole corrette)</option>
+            <option value="medium">🟡 Medio (Con parole intruse/distrattori)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Area Gioco/Esercizio -->
+    <section class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-slate-200 card-box">
+
+      <!-- Intestazione Testo -->
+      <div class="text-center pb-6 border-b border-slate-100 mb-6">
+        <span class="inline-block px-3 py-1 bg-indigo-100 text-indigo-800 font-semibold rounded-full text-sm mb-2">Comprensione del Testo</span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 flex justify-center items-center gap-2">
+          🟩 Una Forma Perfetta: Il Quadrato
+        </h2>
+        <p class="text-slate-500 text-sm mt-1">Completa il testo inserendo le parole mancanti negli spazi blu.</p>
+      </div>
+
+      <!-- Testo Cloze -->
+      <div id="clozeText" class="text-lg sm:text-xl leading-relaxed text-slate-800 space-y-6">
+        <p>
+          Il quadrato è una figura geometrica piana molto speciale che fa parte della famiglia dei quadrilateri, perché ha 
+          <span class="drop-slot" data-answer="quattro" onclick="slotClicked(this)">
+            <span class="placeholder text-slate-400 font-medium">1. Seleziona</span>
+          </span> 
+          lati.
+        </p>
+
+        <div class="bg-amber-50/60 p-4 rounded-xl border border-amber-200/80 space-y-4">
+          <p class="font-semibold text-amber-900 flex items-center gap-2">
+            <span>💡</span> La caratteristica principale del quadrato è la sua precisione:
+          </p>
+          
+          <ul class="list-disc list-inside space-y-3 pl-2">
+            <li>
+              Tutti i suoi quattro lati sono perfettamente 
+              <span class="drop-slot" data-answer="uguali" onclick="slotClicked(this)">
+                <span class="placeholder text-slate-400 font-medium">2. Seleziona</span>
+              </span> 
+              tra loro.
+            </li>
+            <li>
+              Tutti i suoi quattro angoli interni sono angoli retti, cioè misurano 
+              <span class="drop-slot" data-answer="novanta" onclick="slotClicked(this)">
+                <span class="placeholder text-slate-400 font-medium">3. Seleziona</span>
+              </span> 
+              gradi ciascuno.
+            </li>
+          </ul>
+        </div>
+
+        <p>
+          Se vogliamo calcolare il perimetro del quadrato, cioè la misura di tutto il suo contorno, non serve sommare i lati uno per uno: basta prendere la misura di un solo lato e 
+          <span class="drop-slot" data-answer="moltiplicare" onclick="slotClicked(this)">
+            <span class="placeholder text-slate-400 font-medium">4. Seleziona</span>
+          </span> 
+          per 4.
+        </p>
+
+        <p>
+          Infine, se tracciamo una linea dritta che unisce due angoli opposti, dividiamo il quadrato in due triangoli. Questa linea speciale si chiama 
+          <span class="drop-slot" data-answer="diagonale" onclick="slotClicked(this)">
+            <span class="placeholder text-slate-400 font-medium">5. Seleziona</span>
+          </span>.
+        </p>
+      </div>
+
+      <!-- Banca delle Parole -->
+      <div class="mt-8 pt-6 border-t-2 border-indigo-100 no-print">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="text-base font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <span>🏷️</span> Banca delle Parole:
+          </h3>
+          <span class="text-xs text-slate-500">Tocca una parola per inserirla o rimuoverla</span>
+        </div>
+
+        <!-- Bottoni Parole -->
+        <div id="wordBank" class="flex flex-wrap gap-3 justify-center bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <!-- Popolato via JavaScript -->
+        </div>
+      </div>
+
+      <!-- Azioni di Controllo -->
+      <div class="mt-8 flex flex-wrap justify-center gap-4 no-print">
+        <button onclick="checkAnswers()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-6 py-3 rounded-xl shadow-lg transition flex items-center gap-2 text-lg transform active:scale-95">
+          <span>✅</span> Verifica Risposte
+        </button>
+
+        <button onclick="resetExercise()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-5 py-3 rounded-xl transition flex items-center gap-2 text-base">
+          <span>🔄</span> Ricomincia
+        </button>
+      </div>
+
+      <!-- Feedback finale -->
+      <div id="feedbackBox" class="hidden mt-6 p-4 rounded-2xl text-center font-bold text-lg animate-fade-in"></div>
+
+    </section>
+
+    <!-- Sezione Extra: Filastrocca del Quadrato -->
+    <section class="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100 shadow-md no-print">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+        <div>
+          <h3 class="text-xl font-bold text-indigo-900 flex items-center gap-2">
+            <span>🎵</span> La Filastrocca del Quadrato
+          </h3>
+          <p class="text-xs text-indigo-700">Ascolta la filastrocca per ripassare le regole!</p>
+        </div>
+        <button onclick="readNurseryRhyme()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 shadow">
+          <span>🔊</span> Ascolta Filastrocca
+        </button>
+      </div>
+
+      <div id="rhymeText" class="bg-white/80 p-4 rounded-xl border border-indigo-100 text-indigo-950 font-medium text-center sm:text-left leading-relaxed text-base italic">
+        "Quattro lati tutti uguali,<br>
+        angoli retti eccezionali!<br>
+        Novanta gradi in ogni via,<br>
+        il perimetro è una magia:<br>
+        moltiplica un lato soltanto per quattro,<br>
+        ed il calcolo è bell'e fatto!<br>
+        Traccia in mezzo la diagonale,<br>
+        e due triangoli avrai alla fine uguale!"
+      </div>
+    </section>
+
+    <!-- Footer Stampa / Download -->
+    <footer class="mt-8 text-center no-print">
+      <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white font-semibold px-5 py-2.5 rounded-xl shadow inline-flex items-center gap-2 text-sm">
+        <span>🖨️</span> Stampa o Salva Scheda PDF
+      </button>
+      <p class="text-xs text-slate-400 mt-3">Strumento Didattico Accessibile per la Matematica e la Geometria - Bes/DSA Friendly</p>
+    </footer>
+
+  </main>
+
+  <script>
+    // Configurazione Parole dell'Esercizio
+    const baseWords = [
+      { id: 'quattro', label: 'quattro', icon: '🔢', val: 'quattro' },
+      { id: 'uguali', label: 'uguali', icon: '📐', val: 'uguali' },
+      { id: 'novanta', label: 'novanta', icon: '🕒', val: 'novanta' },
+      { id: 'moltiplicare', label: 'moltiplicare', icon: '✖️', val: 'moltiplicare' },
+      { id: 'diagonale', label: 'diagonale', icon: '📉', val: 'diagonale' }
+    ];
+
+    const distractorWords = [
+      { id: 'tre', label: 'tre', icon: '🔺', val: 'tre' },
+      { id: 'diversi', label: 'diversi', icon: '🔀', val: 'diversi' },
+      { id: 'sommare', label: 'sommare', icon: '➕', val: 'sommare' },
+      { id: 'cerchio', label: 'cerchio', icon: '⚪', val: 'cerchio' }
+    ];
+
+    let currentDifficulty = 'easy';
+    let selectedSlot = null;
+    let baseFontSize = 18;
+
+    // Inizializzazione all'avvio
+    window.onload = function() {
+      renderWordBank();
+      initTTS();
+    };
+
+    // Renderizza la banca parole in base alla difficoltà
+    function renderWordBank() {
+      const bankContainer = document.getElementById('wordBank');
+      bankContainer.innerHTML = '';
+
+      let wordsToDisplay = [...baseWords];
+      if (currentDifficulty === 'medium') {
+        wordsToDisplay = [...baseWords, ...distractorWords];
+      }
+
+      // Mescola le parole in ordine casuale
+      wordsToDisplay.sort(() => Math.random() - 0.5);
+
+      wordsToDisplay.forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'word-btn bg-white border-2 border-indigo-200 hover:border-indigo-500 text-indigo-950 font-extrabold px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2 text-base';
+        btn.dataset.value = item.val;
+        btn.dataset.icon = item.icon;
+        btn.innerHTML = `<span class="text-xl">${item.icon}</span> <span>${item.label}</span>`;
+        btn.onclick = () => selectWord(btn, item);
+        bankContainer.appendChild(btn);
+      });
+    }
+
+    // Gestione selezione slot da riempire
+    function slotClicked(slot) {
+      // De-seleziona eventuale slot precedente
+      document.querySelectorAll('.drop-slot').forEach(s => s.classList.remove('selected'));
+
+      // Se lo slot ha già una parola, la rimuoviamo e la riattiviamo nella banca
+      if (slot.classList.contains('filled')) {
+        const wordVal = slot.dataset.filledValue;
+        clearSlot(slot);
+        
+        // Riattiva il bottone della banca parole
+        const btnToEnable = Array.from(document.querySelectorAll('#wordBank button')).find(b => b.dataset.value === wordVal);
+        if (btnToEnable) {
+          btnToEnable.disabled = false;
+          btnToEnable.classList.remove('opacity-30', 'cursor-not-allowed');
+        }
+        return;
+      }
+
+      // Evidenzia lo slot attivo
+      selectedSlot = slot;
+      slot.classList.add('selected');
+
+      // Pronuncia prompt vocale
+      speakText("Seleziona una parola dalla banca sotto");
+    }
+
+    // Inserisci parola nello slot selezionato
+    function selectWord(btn, item) {
+      if (btn.disabled) return;
+
+      // Se non c'è uno slot selezionato attivamente, trova il primo slot vuoto disponibile
+      if (!selectedSlot) {
+        selectedSlot = Array.from(document.querySelectorAll('.drop-slot')).find(s => !s.classList.contains('filled'));
+      }
+
+      if (!selectedSlot) {
+        speakText("Tutti gli spazi sono già stati completati! Fai clic su Verifica Risposte.");
+        return;
+      }
+
+      // Se lo slot contiene già un elemento, ripristina la parola precedente
+      if (selectedSlot.classList.contains('filled')) {
+        const prevVal = selectedSlot.dataset.filledValue;
+        const prevBtn = Array.from(document.querySelectorAll('#wordBank button')).find(b => b.dataset.value === prevVal);
+        if (prevBtn) {
+          prevBtn.disabled = false;
+          prevBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+        }
+      }
+
+      // Inserisci la nuova parola nello slot
+      selectedSlot.innerHTML = `<span class="text-lg mr-1">${item.icon}</span> <strong>${item.label}</strong>`;
+      selectedSlot.classList.add('filled');
+      selectedSlot.classList.remove('selected', 'incorrect', 'correct');
+      selectedSlot.dataset.filledValue = item.val;
+
+      // Disabilita parola usata
+      btn.disabled = true;
+      btn.classList.add('opacity-30', 'cursor-not-allowed');
+
+      // Reset slot selezionato
+      selectedSlot = null;
+      document.querySelectorAll('.drop-slot').forEach(s => s.classList.remove('selected'));
+
+      // Leggi la parola selezionata
+      speakText(item.label);
+    }
+
+    // Svuota slot
+    function clearSlot(slot) {
+      slot.innerHTML = `<span class="placeholder text-slate-400 font-medium">Seleziona</span>`;
+      slot.classList.remove('filled', 'correct', 'incorrect', 'selected');
+      delete slot.dataset.filledValue;
+    }
+
+    // Cambia Livello Difficoltà
+    function changeDifficulty() {
+      currentDifficulty = document.getElementById('difficulty').value;
+      resetExercise();
+    }
+
+    // Verifica Risposte dell'Esercizio
+    function checkAnswers() {
+      const slots = document.querySelectorAll('.drop-slot');
+      let correctCount = 0;
+      let totalSlots = slots.length;
+      let allFilled = true;
+
+      slots.forEach(slot => {
+        const userVal = slot.dataset.filledValue;
+        const expectedVal = slot.dataset.answer;
+
+        if (!userVal) {
+          allFilled = false;
+          slot.classList.add('incorrect');
+        } else if (userVal === expectedVal) {
+          slot.classList.remove('incorrect');
+          slot.classList.add('correct');
+          correctCount++;
+        } else {
+          slot.classList.remove('correct');
+          slot.classList.add('incorrect');
+        }
+      });
+
+      const feedbackBox = document.getElementById('feedbackBox');
+      feedbackBox.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-900', 'bg-amber-100', 'text-amber-900');
+
+      if (!allFilled) {
+        feedbackBox.className = "mt-6 p-4 rounded-2xl text-center font-bold text-lg bg-amber-100 text-amber-900 border border-amber-300";
+        feedbackBox.innerHTML = "⚠️ Hai lasciato alcuni spazi vuoti! Completa tutto l'esercizio.";
+        speakText("Hai lasciato alcuni spazi vuoti! Completa tutto l'esercizio.");
+        return;
+      }
+
+      if (correctCount === totalSlots) {
+        feedbackBox.className = "mt-6 p-4 rounded-2xl text-center font-bold text-lg bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-md";
+        feedbackBox.innerHTML = `🎉 eccellente! Hai completato l'esercizio correttamente! (${correctCount}/${totalSlots})`;
+        
+        // Lancio dei coriandoli
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+
+        speakText("Bravissimo! Hai completato l'esercizio correttamente!");
+      } else {
+        feedbackBox.className = "mt-6 p-4 rounded-2xl text-center font-bold text-lg bg-amber-100 text-amber-900 border border-amber-300";
+        feedbackBox.innerHTML = `💪 Ci sei quasi! Risposte corrette: ${correctCount} su ${totalSlots}. Riprova le parole evidenziate in rosso.`;
+        speakText(`Ci sei quasi! Risposte corrette: ${correctCount} su ${totalSlots}. Controlla gli errori in rosso.`);
+      }
+    }
+
+    // Ripristina l'esercizio
+    function resetExercise() {
+      document.querySelectorAll('.drop-slot').forEach(slot => clearSlot(slot));
+      document.getElementById('feedbackBox').classList.add('hidden');
+      renderWordBank();
+      speakText("Esercizio ricominciato.");
+    }
+
+    // Accessibilità: Attiva/Disattiva Font OpenDyslexic
+    function toggleDyslexicFont() {
+      document.body.classList.toggle('font-dyslexic');
+      const isActive = document.body.classList.contains('font-dyslexic');
+      speakText(isActive ? "Font ad alta leggibilità attivato" : "Font predefinito attivato");
+    }
+
+    // Accessibilità: Ingrandisci / Rimpicciolisci Testo
+    function changeFontSize(delta) {
+      baseFontSize = Math.max(14, Math.min(26, baseFontSize + delta));
+      document.getElementById('clozeText').style.fontSize = baseFontSize + 'px';
+    }
+
+    // Sintesi Vocale Web Speech API (Text To Speech)
+    function initTTS() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Interrompe letture precedenti
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'it-IT';
+        utterance.rate = 0.9; // Velocità leggermente ridotta per BES
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function readFullText() {
+      const title = "Una Forma Perfetta: Il Quadrato.";
+      const text = `
+        Il quadrato è una figura geometrica piana molto speciale che fa parte della famiglia dei quadrilateri, perché ha quattro lati.
+        La caratteristica principale del quadrato è la sua precisione:
+        Tutti i suoi quattro lati sono perfettamente uguali tra loro.
+        Tutti i suoi quattro angoli interni sono angoli retti, cioè misurano novanta gradi ciascuno.
+        Se vogliamo calcolare il perimetro del quadrato, cioè la misura di tutto il suo contorno, non serve sommare i lati uno per uno: basta prendere la misura di un solo lato e moltiplicare per 4.
+        Infine, se tracciamo una linea dritta che unisce due angoli opposti, dividiamo il quadrato in due triangoli. Questa linea speciale si chiama diagonale.
+      `;
+      speakText(title + " " + text);
+    }
+
+    function readNurseryRhyme() {
+      const rhyme = document.getElementById('rhymeText').innerText;
+      speakText("La Filastrocca del Quadrato. " + rhyme);
+    }
+  </script>
+</body>
+</html>
